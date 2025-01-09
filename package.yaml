@@ -1,0 +1,57 @@
+name:                http-haskel
+version:             0.1.0.0
+github:              "SeverinDenisenko/http-haskel"
+license:             BSD-3-Clause
+author:              "Severin Denisenko"
+maintainer:          "severindenisenko@gmail.com"
+copyright:           "2025 Severin Denisenko"
+
+extra-source-files:
+- README.md
+- CHANGELOG.md
+
+synopsis:            http server for haskel
+category:            Web
+
+description:         My toy http server
+
+dependencies:
+- base >= 4.7 && < 5
+- network
+- bytestring
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Widentities
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wmissing-export-lists
+- -Wmissing-home-modules
+- -Wpartial-fields
+- -Wredundant-constraints
+
+library:
+  source-dirs: src
+
+executables:
+  http-haskel-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - http-haskel
+
+tests:
+  http-haskel-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - http-haskel
