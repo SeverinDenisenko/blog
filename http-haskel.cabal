@@ -38,6 +38,7 @@ library
   build-depends:
       base >=4.7 && <5
     , bytestring
+    , directory
     , network
   default-language: Haskell2010
 
@@ -53,6 +54,7 @@ executable http-haskel-exe
   build-depends:
       base >=4.7 && <5
     , bytestring
+    , directory
     , http-haskel
     , network
   default-language: Haskell2010
@@ -70,6 +72,7 @@ test-suite http-haskel-test
   build-depends:
       base >=4.7 && <5
     , bytestring
+    , directory
     , http-haskel
     , network
   default-language: Haskell2010
