@@ -3,4 +3,6 @@ module Main (main) where
 import Server
 
 main :: IO ()
-main = serverMainLoop
+main = do
+  let server_config = ServerConfig 8000 5
+  serverMainLoop server_config
