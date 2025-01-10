@@ -30,8 +30,8 @@ jobs:
         run: |
           mkdir package
           dir=$(stack path --dist-dir)/build/http-haskell
-          [[ -e "$dir/generator" ]] && cp "$dir/http-haskell-exe" package/http-haskell
-          [[ -e "$dir/http-haskell-exe" ]] && cp "$dir/http-haskell-exe" package/http-haskell
+          [[ -e "$dir/generator" ]] && cp "$dir/http-haskell-exe" ./package/http-haskell
+          [[ -e "$dir/http-haskell-exe" ]] && cp "$dir/http-haskell-exe" ./package/http-haskell
           cd ..
           cp -r static template package/
 
