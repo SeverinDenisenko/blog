@@ -20,15 +20,19 @@ readSocket csock = catch (readSocketUnsafe csock) handler
   where
     handler :: IOException -> IO [Char]
     handler ex = do
-      print ex
+      print ("Error while reading from socket: " ++ show ex)
       return (show ex)
 
+writeSocketUnsafe :: Socket -> [Char] -> IO Int
+writeSocketUnsafe csock string = do
+  SocketByteString.send csock (pack string)
+
 writeSocket :: Socket -> [Char] -> IO Int
-writeSocket csock string = catch (SocketByteString.send csock (pack string)) handler
+writeSocket csock string = catch (writeSocketUnsafe csock string) handler
   where
     handler :: IOException -> IO Int
     handler ex = do
-      print ex
+      print ("Error while writing to socket: " ++ show ex)
       return 0
 
 closeConnection :: Socket -> IO ()
