@@ -132,7 +132,7 @@ handleRequest :: Socket -> ServerConfig -> IO ()
 handleRequest csock server_config = do
   dat <- readSocket csock
   if Data.ByteString.Char8.length dat == 0
-    then close csock
+    then closeConnection csock
     else do
       let request = parceHttpRequest (unpack dat)
       createResponse csock server_config request
