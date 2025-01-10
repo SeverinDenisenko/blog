@@ -83,12 +83,29 @@ data HTTPResponse = HTTPResponse
     http_response_content :: [Char]
   }
 
+data HTTPErrorResponse = HTTPErrorResponse
+  { http_error_protocol_version :: [Char],
+    http_error_code :: Int,
+    http_error_status :: [Char],
+    http_error_location :: [Char]
+  }
+
 creteDataFromHTTPResponse :: HTTPResponse -> [Char]
 creteDataFromHTTPResponse response = do
   let first_line = http_response_protocol_version response ++ " " ++ show (http_response_code response) ++ " " ++ http_response_status response
   let second_line = "Content-Length: " ++ show (http_response_content_length response)
   let third_line = "Content-Type: " ++ http_response_content_type response
   first_line ++ "\r\n" ++ second_line ++ "\r\n" ++ third_line ++ "\r\n\r\n" ++ http_response_content response
+
+creteDataFromHTTPErrorResponse :: HTTPErrorResponse -> [Char]
+creteDataFromHTTPErrorResponse response
+  | http_error_code response == 308 = do
+      let first_line = http_error_protocol_version response ++ " " ++ show (http_error_code response) ++ " " ++ http_error_status response
+      let second_line = "Location: " ++ show (http_error_location response)
+      first_line ++ "\r\n" ++ second_line ++ "\r\n"
+  | otherwise = do
+      let first_line = http_error_protocol_version response ++ " " ++ show (http_error_code response) ++ " " ++ http_error_status response
+      first_line ++ "\r\n"
 
 parceHttpRequest :: [Char] -> HTTPRequest
 parceHttpRequest request = do
@@ -119,13 +136,15 @@ createGETResponse csock server_config request = do
   let extention = takeExtension response_file
   file_dump_try <- try (dumpFileContents response_file) :: IO (Either SomeException ByteString)
   case file_dump_try of
-    Left ex -> do
-      print ex
-      closeConnection csock
-      return ()
+    Left _ -> do
+      let response = HTTPErrorResponse (http_request_protocol_version request) 301 "Moved Permanently" (default_page server_config)
+      let response_str = creteDataFromHTTPErrorResponse response
+      _ <- writeSocket csock response_str
+      handleRequest csock server_config
     Right file_dump -> do
       let content_type = extentionToContentType extention
-      let response = HTTPResponse (http_request_protocol_version request) 200 "OK" (Data.ByteString.Char8.length file_dump) content_type (unpack file_dump)
+      let content_size = Data.ByteString.Char8.length file_dump
+      let response = HTTPResponse (http_request_protocol_version request) 200 "OK" content_size content_type (unpack file_dump)
       let response_str = creteDataFromHTTPResponse response
       _ <- writeSocket csock response_str
       handleRequest csock server_config
