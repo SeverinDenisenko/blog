@@ -58,7 +58,6 @@ writeSocket csock string = catch (SocketByteString.send csock (pack string)) han
 
 closeConnection :: Socket -> IO ()
 closeConnection csock = do
-  print "Error. Closing connection."
   gracefulClose csock 5
 
 dumpFileContents :: [Char] -> IO [Char]
@@ -118,7 +117,6 @@ createGETResponse csock server_config request = do
     Right file_dump -> do
       let response = HTTPResponse "HTTP/1.1" 200 "OK" (Prelude.length file_dump) "text/html; charset=utf-8" file_dump
       let response_str = creteDataFromHTTPResponse response
-      print response_str
       _ <- writeSocket csock response_str
       handleRequest csock server_config
 
