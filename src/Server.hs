@@ -117,8 +117,7 @@ createGETResponse csock server_config request = do
       return ()
     Right file_dump -> do
       let response = HTTPResponse "HTTP/1.1" 200 "OK" (Prelude.length file_dump) "text/html; charset=utf-8" file_dump
-      written <- writeSocket csock (creteDataFromHTTPResponse response)
-      print ("Writen " ++ show written ++ " bytes")
+      _ <- writeSocket csock (creteDataFromHTTPResponse response)
       handleRequest csock server_config
 
 createResponse :: Socket -> ServerConfig -> HTTPRequest -> IO ()
@@ -132,8 +131,5 @@ createResponse csock server_config request
 handleRequest :: Socket -> ServerConfig -> IO ()
 handleRequest csock server_config = do
   dat <- readSocket csock
-  if Data.ByteString.Char8.length dat == 0
-    then closeConnection csock
-    else do
-      let request = parceHttpRequest (unpack dat)
-      createResponse csock server_config request
+  let request = parceHttpRequest (unpack dat)
+  createResponse csock server_config request
