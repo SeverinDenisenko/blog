@@ -139,22 +139,13 @@ body {
     font-size: 0.9rem;
 }
 
-ul {
+.ui-footer {
     list-style-type: none;
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background-color: #333333;
 }
 
-li {
+.li-footer {
     float: left;
-}
-
-li a {
-    display: block;
-    color: white;
-    text-align: center;
-    padding: 16px;
-    text-decoration: none;
 }
