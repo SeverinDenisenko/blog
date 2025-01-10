@@ -110,6 +110,8 @@ extentionToContentType ext
   | ext == ".html" = "text/html; charset=utf-8"
   | ext == ".css" = "text/css"
   | ext == ".js" = "text/javascript; charset=utf-8"
+  | ext == ".ico" = "image/x-icon"
+  | ext == ".png" = "image/png"
   | otherwise = "text"
 
 createGETResponse :: Socket -> ServerConfig -> HTTPRequest -> IO ()
