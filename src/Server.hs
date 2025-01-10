@@ -57,7 +57,9 @@ writeSocket csock string = catch (SocketByteString.send csock (pack string)) han
       return 0
 
 closeConnection :: Socket -> IO ()
-closeConnection csock = close csock
+closeConnection csock = do
+  print "Error. Closing connection."
+  close csock
 
 dumpFileContents :: [Char] -> IO [Char]
 dumpFileContents name = do
