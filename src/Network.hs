@@ -2,6 +2,8 @@ module Network
   ( readSocket,
     writeSocket,
     closeConnection,
+    openConnection,
+    acceptConnection,
   )
 where
 
@@ -9,6 +11,20 @@ import Control.Exception (IOException, catch)
 import Data.ByteString.Char8 (pack, unpack)
 import Network.Socket
 import qualified Network.Socket.ByteString as SocketByteString
+
+openConnection :: Int -> Int -> IO Socket
+openConnection server_port server_connection_pool = do
+  sock <- socket AF_INET Stream 0
+  let server_addr = tupleToHostAddress (0, 0, 0, 0)
+  let port = fromIntegral server_port
+  bind sock (SockAddrInet port server_addr)
+  listen sock server_connection_pool
+  return sock
+
+acceptConnection :: Socket -> IO Socket
+acceptConnection sock = do
+  (csock, _) <- accept sock
+  return csock
 
 readSocketUnsafe :: Socket -> IO [Char]
 readSocketUnsafe csock = do

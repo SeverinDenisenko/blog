@@ -22,11 +22,7 @@ data ServerConfig = ServerConfig
 
 runServer :: ServerConfig -> IO ()
 runServer server_config = do
-  sock <- socket AF_INET Stream 0
-  let server_addr = tupleToHostAddress (0, 0, 0, 0)
-  let port = fromIntegral (server_port server_config)
-  bind sock (SockAddrInet port server_addr)
-  listen sock (server_connection_pool server_config)
+  sock <- openConnection (server_port server_config) (server_connection_pool server_config)
   catch (serverMainLoop sock server_config) handler
   where
     handler :: SomeException -> IO ()
@@ -35,12 +31,12 @@ runServer server_config = do
 
 serverMainLoop :: Socket -> ServerConfig -> IO ()
 serverMainLoop sock server_config = do
-  (csock, _) <- accept sock
+  csock <- acceptConnection sock
   catch (handleRequest csock server_config >> serverMainLoop sock server_config) handler
   where
     handler :: SomeException -> IO ()
     handler ex = do
-      print ex
+      print ("Error while handling request: " ++ show ex)
       serverMainLoop sock server_config
 
 data HTTPException = HTTPException deriving (Show)
