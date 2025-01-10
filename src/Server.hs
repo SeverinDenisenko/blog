@@ -17,7 +17,7 @@ data ServerConfig = ServerConfig {server_port :: Int, server_connection_pool :: 
 runServer :: ServerConfig -> IO ()
 runServer server_config = do
   sock <- socket AF_INET Stream 0
-  let server_addr = tupleToHostAddress (127, 0, 0, 1)
+  let server_addr = tupleToHostAddress (0, 0, 0, 0)
   let port = fromIntegral (server_port server_config)
   bind sock (SockAddrInet port server_addr)
   listen sock (server_connection_pool server_config)
