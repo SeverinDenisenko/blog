@@ -140,14 +140,14 @@ createGETResponse csock server_config request = do
       let response = HTTPErrorResponse (http_request_protocol_version request) 301 "Moved Permanently" (default_page server_config)
       let response_str = creteDataFromHTTPErrorResponse response
       _ <- writeSocket csock response_str
-      handleRequest csock server_config
+      closeConnection csock
     Right file_dump -> do
       let content_type = extentionToContentType extention
       let content_size = Data.ByteString.Char8.length file_dump
       let response = HTTPResponse (http_request_protocol_version request) 200 "OK" content_size content_type (unpack file_dump)
       let response_str = creteDataFromHTTPResponse response
       _ <- writeSocket csock response_str
-      handleRequest csock server_config
+      closeConnection csock
 
 createResponse :: Socket -> ServerConfig -> HTTPRequest -> IO ()
 createResponse csock server_config request
