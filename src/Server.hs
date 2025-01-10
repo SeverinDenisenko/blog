@@ -80,7 +80,7 @@ creteDataFromHTTPErrorResponse :: HTTPErrorResponse -> [Char]
 creteDataFromHTTPErrorResponse response
   | http_error_code response == 308 = do
       let first_line = http_error_protocol_version response ++ " " ++ show (http_error_code response) ++ " " ++ http_error_status response
-      let second_line = "Location: " ++ show (http_error_location response)
+      let second_line = "Location: " ++ http_error_location response
       first_line ++ "\r\n" ++ second_line ++ "\r\n\r\n"
   | otherwise = do
       let first_line = http_error_protocol_version response ++ " " ++ show (http_error_code response) ++ " " ++ http_error_status response
