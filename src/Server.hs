@@ -6,14 +6,12 @@ module Server
   )
 where
 
-import Control.Exception (Exception, IOException, SomeException, catch, try)
+import Control.Exception (Exception, SomeException, catch, try)
 import Control.Exception.Base (throw)
-import Data.ByteString (readFile)
-import Data.ByteString.Char8 (ByteString, length, pack, unpack)
+import Files
+import Network
 import Network.Socket
-import qualified Network.Socket.ByteString as SocketByteString
 import System.FilePath
-import System.Directory
 
 data ServerConfig = ServerConfig
   { server_port :: Int,
@@ -39,43 +37,11 @@ serverMainLoop :: Socket -> ServerConfig -> IO ()
 serverMainLoop sock server_config = do
   (csock, _) <- accept sock
   catch (handleRequest csock server_config >> serverMainLoop sock server_config) handler
-    where
-      handler :: SomeException -> IO ()
-      handler ex = do
-        print ex
-        serverMainLoop sock server_config
-
-readSocket :: Socket -> IO ByteString
-readSocket csock = catch (SocketByteString.recv csock 4096) handler
   where
-    handler :: IOException -> IO ByteString
+    handler :: SomeException -> IO ()
     handler ex = do
       print ex
-      return (pack (show ex))
-
-data SystemException = SystemException deriving (Show)
-
-instance Exception SystemException
-
-writeSocket :: Socket -> [Char] -> IO Int
-writeSocket csock string = catch (SocketByteString.send csock (pack string)) handler
-  where
-    handler :: IOException -> IO Int
-    handler ex = do
-      print ex
-      return 0
-
-closeConnection :: Socket -> IO ()
-closeConnection csock = do
-  gracefulClose csock 5
-
-dumpFileContents :: [Char] -> IO ByteString
-dumpFileContents name = do
-  exist <- doesFileExist name
-  if exist then
-    Data.ByteString.readFile name
-  else
-    throw SystemException
+      serverMainLoop sock server_config
 
 data HTTPException = HTTPException deriving (Show)
 
@@ -123,7 +89,7 @@ creteDataFromHTTPErrorResponse response
 parceHttpRequest :: [Char] -> HTTPRequest
 parceHttpRequest request = do
   let request_tokens = words request
-  if Prelude.length request_tokens < 3
+  if length request_tokens < 3
     then throw HTTPException
     else do
       let method = request_tokens !! 0
@@ -147,7 +113,7 @@ createGETResponse :: Socket -> ServerConfig -> HTTPRequest -> IO ()
 createGETResponse csock server_config request = do
   let response_file = getResponseFilePath (http_path request) server_config
   let extention = takeExtension response_file
-  file_dump_try <- try (dumpFileContents response_file) :: IO (Either SomeException ByteString)
+  file_dump_try <- try (dumpFileContents response_file) :: IO (Either SomeException [Char])
   case file_dump_try of
     Left _ -> do
       let response = HTTPErrorResponse (http_request_protocol_version request) 301 "Moved Permanently" (default_page server_config)
@@ -156,8 +122,8 @@ createGETResponse csock server_config request = do
       closeConnection csock
     Right file_dump -> do
       let content_type = extentionToContentType extention
-      let content_size = Data.ByteString.Char8.length file_dump
-      let response = HTTPResponse (http_request_protocol_version request) 200 "OK" content_size content_type (unpack file_dump)
+      let content_size = length file_dump
+      let response = HTTPResponse (http_request_protocol_version request) 200 "OK" content_size content_type file_dump
       let response_str = creteDataFromHTTPResponse response
       _ <- writeSocket csock response_str
       closeConnection csock
@@ -173,9 +139,9 @@ createResponse csock server_config request
 handleRequest :: Socket -> ServerConfig -> IO ()
 handleRequest csock server_config = do
   dat <- readSocket csock
-  if Data.ByteString.Char8.length dat == 0
+  if length dat == 0
     then
       closeConnection csock
     else do
-      let request = parceHttpRequest (unpack dat)
+      let request = parceHttpRequest dat
       createResponse csock server_config request

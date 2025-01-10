@@ -27,6 +27,8 @@ source-repository head
 
 library
   exposed-modules:
+      Files
+      Network
       Server
   other-modules:
       Paths_http_haskel
