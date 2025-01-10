@@ -64,9 +64,6 @@ dumpFileContents name = do
   fileHandle <- openFile name ReadMode
   hGetContents fileHandle
 
-createHttpResponse :: [Char] -> [Char]
-createHttpResponse str = "HTTP/1.1 200 OK\r\n" ++ "Content-Length: " ++ show (Prelude.length str) ++ "\r\n" ++ "Content-Type: text/html; charset=utf-8\r\n" ++ "\r\n" ++ str
-
 data HTTPException = HTTPException deriving (Show)
 
 instance Exception HTTPException
@@ -79,11 +76,19 @@ data HTTPRequest = HTTPRequest
 
 data HTTPResponse = HTTPResponse
   { http_response_protocol_version :: [Char],
-    http_response_code :: [Char],
+    http_response_code :: Int,
     http_response_status :: [Char],
     http_response_content_length :: Int,
-    http_response_content_type :: [Char]
+    http_response_content_type :: [Char],
+    http_response_content :: [Char]
   }
+
+creteDataFromHTTPResponse :: HTTPResponse -> [Char]
+creteDataFromHTTPResponse response = do
+  let first_line = http_response_protocol_version response ++ " " ++ show (http_response_code response) ++ " " ++ http_response_status response
+  let second_line = "Content-Length: " ++ show (http_response_content_length response)
+  let third_line = "Content-Type: " ++ http_response_content_type response
+  first_line ++ "\r\n" ++ second_line ++ "\r\n" ++ third_line ++ http_response_content response
 
 parceHttpRequest :: [Char] -> HTTPRequest
 parceHttpRequest request = do
@@ -109,8 +114,8 @@ createGETResponse csock server_config request = do
       closeConnection csock
       return ()
     Right file_dump -> do
-      let http_response = createHttpResponse file_dump
-      _ <- writeSocket csock http_response
+      let response = HTTPResponse "HTTP/1.1" 200 "OK" (Prelude.length file_dump) "text/html; charset=utf-8" file_dump
+      _ <- writeSocket csock (creteDataFromHTTPResponse response)
       handleRequest csock server_config
 
 createResponse :: Socket -> ServerConfig -> HTTPRequest -> IO ()
