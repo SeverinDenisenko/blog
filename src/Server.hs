@@ -90,7 +90,7 @@ creteDataFromHTTPResponse response = do
   let first_line = http_response_protocol_version response ++ " " ++ show (http_response_code response) ++ " " ++ http_response_status response
   let second_line = "Content-Length: " ++ show (http_response_content_length response)
   let third_line = "Content-Type: " ++ http_response_content_type response
-  first_line ++ "\r\n" ++ second_line ++ "\r\n" ++ third_line ++ "\r\n" ++ http_response_content response ++ "\r\n"
+  first_line ++ "\r\n" ++ second_line ++ "\r\n" ++ third_line ++ "\r\n\r\n" ++ http_response_content response
 
 parceHttpRequest :: [Char] -> HTTPRequest
 parceHttpRequest request = do
