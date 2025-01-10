@@ -59,7 +59,7 @@ writeSocket csock string = catch (SocketByteString.send csock (pack string)) han
 closeConnection :: Socket -> IO ()
 closeConnection csock = do
   print "Error. Closing connection."
-  close csock
+  gracefulClose csock 5
 
 dumpFileContents :: [Char] -> IO [Char]
 dumpFileContents name = do
@@ -131,5 +131,9 @@ createResponse csock server_config request
 handleRequest :: Socket -> ServerConfig -> IO ()
 handleRequest csock server_config = do
   dat <- readSocket csock
-  let request = parceHttpRequest (unpack dat)
-  createResponse csock server_config request
+  if Data.ByteString.Char8.length dat == 0
+    then
+      closeConnection csock
+    else do
+      let request = parceHttpRequest (unpack dat)
+      createResponse csock server_config request
