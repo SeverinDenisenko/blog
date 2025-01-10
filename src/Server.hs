@@ -12,7 +12,7 @@ import Network.Socket
 import qualified Network.Socket.ByteString as SocketByteString
 import System.IO
 
-data ServerConfig = ServerConfig {server_port :: Int, server_connection_pool :: Int, server_content :: [Char]}
+data ServerConfig = ServerConfig {server_port :: Int, server_connection_pool :: Int, server_content :: [Char], default_page :: [Char]}
 
 runServer :: ServerConfig -> IO ()
 runServer server_config = do
@@ -21,17 +21,17 @@ runServer server_config = do
   let port = fromIntegral (server_port server_config)
   bind sock (SockAddrInet port server_addr)
   listen sock (server_connection_pool server_config)
-  catch (serverMainLoop sock (server_content server_config)) handler
+  catch (serverMainLoop sock server_config) handler
   where
     handler :: SomeException -> IO ()
     handler ex = do
       print ex
 
-serverMainLoop :: Socket -> [Char] -> IO ()
-serverMainLoop sock server_content = do
+serverMainLoop :: Socket -> ServerConfig -> IO ()
+serverMainLoop sock server_config = do
   (csock, _) <- accept sock
-  handleRequest csock server_content
-  serverMainLoop sock server_content
+  handleRequest csock server_config
+  serverMainLoop sock server_config
 
 readSocket :: Socket -> IO ByteString
 readSocket csock = catch (SocketByteString.recv csock 4096) handler
@@ -57,16 +57,16 @@ dumpFileContents name = do
 createHttpResponce :: [Char] -> [Char]
 createHttpResponce str = "HTTP/1.1 200 OK\r\n" ++ "Content-Length: " ++ show (Prelude.length str) ++ "\r\n" ++ "Content-Type: text/html; charset=utf-8\r\n" ++ "\r\n" ++ str
 
-parceHttpRequest :: [Char] -> [Char] -> [Char]
-parceHttpRequest header server_content = do
+parceHttpRequest :: [Char] -> ServerConfig -> [Char]
+parceHttpRequest header server_config = do
   let list = words header
-  let path = list !! 1
-  server_content ++ path
+  let path = if Prelude.length list >= 2 then list !! 1 else default_page server_config
+  server_content server_config ++ path
 
-handleRequest :: Socket -> [Char] -> IO ()
-handleRequest csock server_content = do
+handleRequest :: Socket -> ServerConfig -> IO ()
+handleRequest csock server_config = do
   dat <- readSocket csock
-  let filename = parceHttpRequest (unpack dat) server_content
+  let filename = parceHttpRequest (unpack dat) server_config
   file_dump_try <- try (dumpFileContents filename) :: IO (Either SomeException [Char])
   case file_dump_try of
     Left ex -> do
@@ -78,4 +78,4 @@ handleRequest csock server_content = do
       sent <- writeSocket csock http_responce
       print $ unwords ["Received :", unpack dat]
       print $ unwords ["Sent :", show sent]
-      if Data.ByteString.Char8.length dat == 0 then close csock else handleRequest csock server_content
+      if Data.ByteString.Char8.length dat == 0 then close csock else handleRequest csock server_config
