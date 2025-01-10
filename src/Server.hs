@@ -105,9 +105,17 @@ parceHttpRequest request = do
 getResponseFilePath :: [Char] -> ServerConfig -> [Char]
 getResponseFilePath path server_config = takeDirectory (server_content server_config) </> takeFileName path
 
+extentionToContentType :: [Char] -> [Char]
+extentionToContentType ext
+  | ext == ".html" = "text/html; charset=utf-8"
+  | ext == ".css" = "text/css"
+  | ext == ".js" = "text/javascript; charset=utf-8"
+  | otherwise = "text"
+
 createGETResponse :: Socket -> ServerConfig -> HTTPRequest -> IO ()
 createGETResponse csock server_config request = do
   let response_file = getResponseFilePath (http_path request) server_config
+  let extention = takeExtension response_file
   file_dump_try <- try (dumpFileContents response_file) :: IO (Either SomeException [Char])
   case file_dump_try of
     Left ex -> do
@@ -115,7 +123,8 @@ createGETResponse csock server_config request = do
       closeConnection csock
       return ()
     Right file_dump -> do
-      let response = HTTPResponse "HTTP/1.1" 200 "OK" (Prelude.length file_dump) "text/html; charset=utf-8" file_dump
+      let content_type = extentionToContentType extention
+      let response = HTTPResponse "HTTP/1.1" 200 "OK" (Prelude.length file_dump) content_type file_dump
       let response_str = creteDataFromHTTPResponse response
       _ <- writeSocket csock response_str
       handleRequest csock server_config
