@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Cache dependencies (Unix)
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         if: matrix.os != 'windows-2019'
         with:
           path: ~/.stack
