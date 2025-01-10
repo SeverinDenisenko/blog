@@ -13,6 +13,7 @@ import Data.ByteString.Char8 (ByteString, length, pack, unpack)
 import Network.Socket
 import qualified Network.Socket.ByteString as SocketByteString
 import System.FilePath
+import System.Directory
 
 data ServerConfig = ServerConfig
   { server_port :: Int,
@@ -52,6 +53,10 @@ readSocket csock = catch (SocketByteString.recv csock 4096) handler
       print ex
       return (pack (show ex))
 
+data SystemException = SystemException deriving (Show)
+
+instance Exception SystemException
+
 writeSocket :: Socket -> [Char] -> IO Int
 writeSocket csock string = catch (SocketByteString.send csock (pack string)) handler
   where
@@ -66,7 +71,11 @@ closeConnection csock = do
 
 dumpFileContents :: [Char] -> IO ByteString
 dumpFileContents name = do
-  Data.ByteString.readFile name
+  exist <- doesFileExist name
+  if exist then
+    Data.ByteString.readFile name
+  else
+    throw SystemException
 
 data HTTPException = HTTPException deriving (Show)
 
