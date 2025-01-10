@@ -1,8 +1,126 @@
-body {
-    background-color: lightblue;
+/* General Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-h1 {
-    color: navy;
-    margin-left: 20px;
+body {
+    font-family: 'Roboto', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f9f9f9;
+    margin: 0;
+}
+
+h1, h2, h3 {
+    font-family: 'Open Sans', sans-serif;
+}
+
+/* Header Styles */
+.header {
+    background-color: #333;
+    color: #fff;
+    padding: 1rem 0;
+    text-align: center;
+}
+
+.header .blog-title {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.header .blog-tagline {
+    font-size: 1.2rem;
+    color: #ddd;
+}
+
+.nav {
+    margin-top: 1rem;
+}
+
+.nav a {
+    color: #fff;
+    text-decoration: none;
+    margin: 0 1rem;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.nav a:hover {
+    color: #f4b400;
+}
+
+/* Main Content */
+.main .section {
+    padding: 3rem 1rem;
+}
+
+.container {
+    width: 90%;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* Blog Section */
+.blog-section {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 2rem;
+    padding: 2rem;
+}
+
+.blog-post {
+    margin-bottom: 2rem;
+}
+
+.post-title {
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.post-excerpt {
+    margin: 0.5rem 0 1rem;
+}
+
+.read-more {
+    display: inline-block;
+    color: #fff;
+    background-color: #333;
+    padding: 0.5rem 1rem;
+    border-radius: 3px;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.read-more:hover {
+    background-color: #444;
+}
+
+/* About Section */
+.about-section {
+    background-color: #f4f4f4;
+    border-radius: 5px;
+    padding: 2rem;
+}
+
+/* Footer Styles */
+.footer {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.footer .social-links a {
+    color: #f4b400;
+    text-decoration: none;
+    margin: 0 0.5rem;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+.footer .social-links a:hover {
+    color: #ff9800;
 }
