@@ -125,7 +125,7 @@ createGETResponse csock server_config request = do
       return ()
     Right file_dump -> do
       let content_type = extentionToContentType extention
-      let response = HTTPResponse "HTTP/1.1" 200 "OK" (Data.ByteString.Char8.length file_dump) content_type (show file_dump)
+      let response = HTTPResponse "HTTP/1.1" 200 "OK" (Data.ByteString.Char8.length file_dump) content_type (unpack file_dump)
       let response_str = creteDataFromHTTPResponse response
       _ <- writeSocket csock response_str
       handleRequest csock server_config
