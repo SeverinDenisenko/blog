@@ -12,7 +12,7 @@ import Data.ByteString.Char8 (ByteString, length, pack, unpack)
 import Network.Socket
 import qualified Network.Socket.ByteString as SocketByteString
 import System.FilePath
-import System.IO
+import Data.ByteString(readFile)
 
 data ServerConfig = ServerConfig
   { server_port :: Int,
@@ -60,10 +60,9 @@ closeConnection :: Socket -> IO ()
 closeConnection csock = do
   gracefulClose csock 5
 
-dumpFileContents :: [Char] -> IO [Char]
+dumpFileContents :: [Char] -> IO ByteString
 dumpFileContents name = do
-  fileHandle <- openFile name ReadMode
-  hGetContents fileHandle
+  Data.ByteString.readFile name
 
 data HTTPException = HTTPException deriving (Show)
 
@@ -118,7 +117,7 @@ createGETResponse :: Socket -> ServerConfig -> HTTPRequest -> IO ()
 createGETResponse csock server_config request = do
   let response_file = getResponseFilePath (http_path request) server_config
   let extention = takeExtension response_file
-  file_dump_try <- try (dumpFileContents response_file) :: IO (Either SomeException [Char])
+  file_dump_try <- try (dumpFileContents response_file) :: IO (Either SomeException ByteString)
   case file_dump_try of
     Left ex -> do
       print ex
@@ -126,7 +125,7 @@ createGETResponse csock server_config request = do
       return ()
     Right file_dump -> do
       let content_type = extentionToContentType extention
-      let response = HTTPResponse "HTTP/1.1" 200 "OK" (Prelude.length file_dump) content_type file_dump
+      let response = HTTPResponse "HTTP/1.1" 200 "OK" (Data.ByteString.Char8.length file_dump) content_type (show file_dump)
       let response_str = creteDataFromHTTPResponse response
       _ <- writeSocket csock response_str
       handleRequest csock server_config
