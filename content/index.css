@@ -70,7 +70,8 @@ body {
 
 /* Bright Section (Alternate Background) */
 .bright-section {
-    background: #fdfc47; /* Yellow */
+    background: #fdfc47;
+    /* Yellow */
     color: #333;
 }
 
@@ -136,4 +137,24 @@ body {
     text-align: center;
     padding: 20px;
     font-size: 0.9rem;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333333;
+}
+
+li {
+    float: left;
+}
+
+li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 16px;
+    text-decoration: none;
 }
