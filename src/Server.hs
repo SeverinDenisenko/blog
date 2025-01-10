@@ -117,7 +117,9 @@ createGETResponse csock server_config request = do
       return ()
     Right file_dump -> do
       let response = HTTPResponse "HTTP/1.1" 200 "OK" (Prelude.length file_dump) "text/html; charset=utf-8" file_dump
-      _ <- writeSocket csock (creteDataFromHTTPResponse response)
+      let response_str = creteDataFromHTTPResponse response
+      print response_str
+      _ <- writeSocket csock response_str
       handleRequest csock server_config
 
 createResponse :: Socket -> ServerConfig -> HTTPRequest -> IO ()
