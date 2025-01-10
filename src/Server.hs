@@ -37,8 +37,12 @@ runServer server_config = do
 serverMainLoop :: Socket -> ServerConfig -> IO ()
 serverMainLoop sock server_config = do
   (csock, _) <- accept sock
-  handleRequest csock server_config
-  serverMainLoop sock server_config
+  catch (handleRequest csock server_config >> serverMainLoop sock server_config) handler
+    where
+      handler :: SomeException -> IO ()
+      handler ex = do
+        print ex
+        serverMainLoop sock server_config
 
 readSocket :: Socket -> IO ByteString
 readSocket csock = catch (SocketByteString.recv csock 4096) handler
