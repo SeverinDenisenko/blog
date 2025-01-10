@@ -132,7 +132,7 @@ body {
 
 /* Footer Section */
 .footer {
-    background: linear-gradient(90deg, #f5af19, #f12711);
+    background: linear-gradient(90deg, #f12711, #f5af19);
     color: #ffffff;
     text-align: center;
     padding: 20px;
