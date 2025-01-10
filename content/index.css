@@ -150,8 +150,11 @@ body {
     float: left;
 }
 
-.a-footer {
+a {
     text-decoration: none;
+}
+
+.a-footer {
     font-weight: bold;
     display: block;
     text-align: center;
