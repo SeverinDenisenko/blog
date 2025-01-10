@@ -154,7 +154,7 @@ createResponse csock server_config request
 handleRequest :: Socket -> ServerConfig -> IO ()
 handleRequest csock server_config = do
   dat <- readSocket csock
-  if length dat == 0
+  if null dat
     then
       closeConnection csock
     else do
