@@ -8,11 +8,11 @@ where
 
 import Control.Exception (Exception, IOException, SomeException, catch, try)
 import Control.Exception.Base (throw)
+import Data.ByteString (readFile)
 import Data.ByteString.Char8 (ByteString, length, pack, unpack)
 import Network.Socket
 import qualified Network.Socket.ByteString as SocketByteString
 import System.FilePath
-import Data.ByteString(readFile)
 
 data ServerConfig = ServerConfig
   { server_port :: Int,
@@ -125,7 +125,7 @@ createGETResponse csock server_config request = do
       return ()
     Right file_dump -> do
       let content_type = extentionToContentType extention
-      let response = HTTPResponse "HTTP/1.1" 200 "OK" (Data.ByteString.Char8.length file_dump) content_type (unpack file_dump)
+      let response = HTTPResponse (http_request_protocol_version request) 200 "OK" (Data.ByteString.Char8.length file_dump) content_type (unpack file_dump)
       let response_str = creteDataFromHTTPResponse response
       _ <- writeSocket csock response_str
       handleRequest csock server_config
