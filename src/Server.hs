@@ -61,8 +61,14 @@ data HTTPResponse = HTTPResponse
 data HTTPErrorResponse = HTTPErrorResponse
   { http_error_protocol_version :: [Char],
     http_error_code :: Int,
-    http_error_status :: [Char],
-    http_error_location :: [Char]
+    http_error_status :: [Char]
+  }
+
+data HTTPRedirectResponse = HTTPRedirectResponse
+  { http_redirect_protocol_version :: [Char],
+    http_redirect_code :: Int,
+    http_redirect_status :: [Char],
+    http_redirect_location :: [Char]
   }
 
 creteDataFromHTTPResponse :: HTTPResponse -> [Char]
@@ -73,14 +79,15 @@ creteDataFromHTTPResponse response = do
   first_line ++ "\r\n" ++ second_line ++ "\r\n" ++ third_line ++ "\r\n\r\n" ++ http_response_content response
 
 creteDataFromHTTPErrorResponse :: HTTPErrorResponse -> [Char]
-creteDataFromHTTPErrorResponse response
-  | http_error_code response == 308 = do
-      let first_line = http_error_protocol_version response ++ " " ++ show (http_error_code response) ++ " " ++ http_error_status response
-      let second_line = "Location: " ++ http_error_location response
-      first_line ++ "\r\n" ++ second_line ++ "\r\n\r\n"
-  | otherwise = do
-      let first_line = http_error_protocol_version response ++ " " ++ show (http_error_code response) ++ " " ++ http_error_status response
-      first_line ++ "\r\n\r\n"
+creteDataFromHTTPErrorResponse response = do
+  let first_line = http_error_protocol_version response ++ " " ++ show (http_error_code response) ++ " " ++ http_error_status response
+  first_line ++ "\r\n\r\n"
+
+creteDataFromHTTPRedirectResponse :: HTTPRedirectResponse -> [Char]
+creteDataFromHTTPRedirectResponse response = do
+  let first_line = http_redirect_protocol_version response ++ " " ++ show (http_redirect_code response) ++ " " ++ http_redirect_status response
+  let second_line = "Location: " ++ http_redirect_location response
+  first_line ++ "\r\n" ++ second_line ++ "\r\n\r\n"
 
 parceHttpRequest :: [Char] -> HTTPRequest
 parceHttpRequest request = do
@@ -112,8 +119,8 @@ createGETResponse csock server_config request = do
   file_dump_try <- try (dumpFileContents response_file) :: IO (Either SomeException [Char])
   case file_dump_try of
     Left _ -> do
-      let response = HTTPErrorResponse (http_request_protocol_version request) 308 "Moved Permanently" (default_page server_config)
-      let response_str = creteDataFromHTTPErrorResponse response
+      let response = HTTPRedirectResponse (http_request_protocol_version request) 308 "Moved Permanently" (default_page server_config)
+      let response_str = creteDataFromHTTPRedirectResponse response
       _ <- writeSocket csock response_str
       closeConnection csock
     Right file_dump -> do
@@ -124,12 +131,24 @@ createGETResponse csock server_config request = do
       _ <- writeSocket csock response_str
       closeConnection csock
 
+createNotAllowedResponse :: Socket -> HTTPRequest -> IO ()
+createNotAllowedResponse csock request = do
+  let response = HTTPErrorResponse (http_request_protocol_version request) 405 "Method Not Allowed"
+  let response_str = creteDataFromHTTPErrorResponse response
+  _ <- writeSocket csock response_str
+  closeConnection csock
+
 createResponse :: Socket -> ServerConfig -> HTTPRequest -> IO ()
 createResponse csock server_config request
   | http_method request == "GET" = createGETResponse csock server_config request
-  | http_method request == "POST" = closeConnection csock
-  | http_method request == "PUT" = closeConnection csock
-  | http_method request == "DEL" = closeConnection csock
+  | http_method request == "POST" = createNotAllowedResponse csock request
+  | http_method request == "PUT" = createNotAllowedResponse csock request
+  | http_method request == "DEL" = createNotAllowedResponse csock request
+  | http_method request == "TRACE" = createNotAllowedResponse csock request
+  | http_method request == "HEAD" = createNotAllowedResponse csock request
+  | http_method request == "CONNECT" = createNotAllowedResponse csock request
+  | http_method request == "OPTIONS" = createNotAllowedResponse csock request
+  | http_method request == "PATCH" = createNotAllowedResponse csock request
   | otherwise = closeConnection csock
 
 handleRequest :: Socket -> ServerConfig -> IO ()
