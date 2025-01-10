@@ -1,7 +1,4 @@
-# http-haskel
+# My personal blog
 
-Wery simple HTTP server
-
-* Can serve files
-* Has basic protection and error handling
-* Less then 100 lines of code!!!
+* Written in pure Haskell using sockets
+* Wery simple and small backend code
