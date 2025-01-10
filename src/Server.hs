@@ -16,8 +16,8 @@ import System.FilePath
 data ServerConfig = ServerConfig
   { server_port :: Int,
     server_connection_pool :: Int,
-    server_content :: [Char],
-    default_page :: [Char]
+    server_content :: String,
+    default_page :: String
   }
 
 runServer :: ServerConfig -> IO ()
@@ -44,52 +44,52 @@ data HTTPException = HTTPException deriving (Show)
 instance Exception HTTPException
 
 data HTTPRequest = HTTPRequest
-  { http_method :: [Char],
-    http_path :: [Char],
-    http_request_protocol_version :: [Char]
+  { http_method :: String,
+    http_path :: String,
+    http_request_protocol_version :: String
   }
 
 data HTTPResponse = HTTPResponse
-  { http_response_protocol_version :: [Char],
+  { http_response_protocol_version :: String,
     http_response_code :: Int,
-    http_response_status :: [Char],
+    http_response_status :: String,
     http_response_content_length :: Int,
-    http_response_content_type :: [Char],
-    http_response_content :: [Char]
+    http_response_content_type :: String,
+    http_response_content :: String
   }
 
 data HTTPErrorResponse = HTTPErrorResponse
-  { http_error_protocol_version :: [Char],
+  { http_error_protocol_version :: String,
     http_error_code :: Int,
-    http_error_status :: [Char]
+    http_error_status :: String
   }
 
 data HTTPRedirectResponse = HTTPRedirectResponse
-  { http_redirect_protocol_version :: [Char],
+  { http_redirect_protocol_version :: String,
     http_redirect_code :: Int,
-    http_redirect_status :: [Char],
-    http_redirect_location :: [Char]
+    http_redirect_status :: String,
+    http_redirect_location :: String
   }
 
-creteDataFromHTTPResponse :: HTTPResponse -> [Char]
+creteDataFromHTTPResponse :: HTTPResponse -> String
 creteDataFromHTTPResponse response = do
   let first_line = http_response_protocol_version response ++ " " ++ show (http_response_code response) ++ " " ++ http_response_status response
   let second_line = "Content-Length: " ++ show (http_response_content_length response)
   let third_line = "Content-Type: " ++ http_response_content_type response
   first_line ++ "\r\n" ++ second_line ++ "\r\n" ++ third_line ++ "\r\n\r\n" ++ http_response_content response
 
-creteDataFromHTTPErrorResponse :: HTTPErrorResponse -> [Char]
+creteDataFromHTTPErrorResponse :: HTTPErrorResponse -> String
 creteDataFromHTTPErrorResponse response = do
   let first_line = http_error_protocol_version response ++ " " ++ show (http_error_code response) ++ " " ++ http_error_status response
   first_line ++ "\r\n\r\n"
 
-creteDataFromHTTPRedirectResponse :: HTTPRedirectResponse -> [Char]
+creteDataFromHTTPRedirectResponse :: HTTPRedirectResponse -> String
 creteDataFromHTTPRedirectResponse response = do
   let first_line = http_redirect_protocol_version response ++ " " ++ show (http_redirect_code response) ++ " " ++ http_redirect_status response
   let second_line = "Location: " ++ http_redirect_location response
   first_line ++ "\r\n" ++ second_line ++ "\r\n\r\n"
 
-parceHttpRequest :: [Char] -> HTTPRequest
+parceHttpRequest :: String -> HTTPRequest
 parceHttpRequest request = do
   let request_tokens = words request
   if length request_tokens < 3
@@ -100,10 +100,10 @@ parceHttpRequest request = do
       let protocol_version = request_tokens !! 2
       HTTPRequest method path protocol_version
 
-getResponseFilePath :: [Char] -> ServerConfig -> [Char]
+getResponseFilePath :: String -> ServerConfig -> String
 getResponseFilePath path server_config = takeDirectory (server_content server_config) </> takeFileName path
 
-extentionToContentType :: [Char] -> [Char]
+extentionToContentType :: String -> String
 extentionToContentType ext
   | ext == ".html" = "text/html; charset=utf-8"
   | ext == ".css" = "text/css"
@@ -116,7 +116,7 @@ createGETResponse :: Socket -> ServerConfig -> HTTPRequest -> IO ()
 createGETResponse csock server_config request = do
   let response_file = getResponseFilePath (http_path request) server_config
   let extention = takeExtension response_file
-  file_dump_try <- try (dumpFileContents response_file) :: IO (Either SomeException [Char])
+  file_dump_try <- try (dumpFileContents response_file) :: IO (Either SomeException String)
   case file_dump_try of
     Left _ -> do
       let response = HTTPRedirectResponse (http_request_protocol_version request) 308 "Moved Permanently" (default_page server_config)

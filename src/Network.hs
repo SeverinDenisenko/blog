@@ -26,24 +26,24 @@ acceptConnection sock = do
   (csock, _) <- accept sock
   return csock
 
-readSocketUnsafe :: Socket -> IO [Char]
+readSocketUnsafe :: Socket -> IO String
 readSocketUnsafe csock = do
   string <- SocketByteString.recv csock 4096
   return (unpack string)
 
-readSocket :: Socket -> IO [Char]
+readSocket :: Socket -> IO String
 readSocket csock = catch (readSocketUnsafe csock) handler
   where
-    handler :: IOException -> IO [Char]
+    handler :: IOException -> IO String
     handler ex = do
       print ("Error while reading from socket: " ++ show ex)
       return (show ex)
 
-writeSocketUnsafe :: Socket -> [Char] -> IO Int
+writeSocketUnsafe :: Socket -> String -> IO Int
 writeSocketUnsafe csock string = do
   SocketByteString.send csock (pack string)
 
-writeSocket :: Socket -> [Char] -> IO Int
+writeSocket :: Socket -> String -> IO Int
 writeSocket csock string = catch (writeSocketUnsafe csock string) handler
   where
     handler :: IOException -> IO Int

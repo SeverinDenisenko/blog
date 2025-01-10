@@ -14,7 +14,7 @@ data SystemException = SystemException deriving (Show)
 
 instance Exception SystemException
 
-dumpFileContents :: [Char] -> IO [Char]
+dumpFileContents :: String -> IO String
 dumpFileContents name = do
   exist <- doesFileExist name
   if exist
