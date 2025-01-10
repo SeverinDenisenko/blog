@@ -6,10 +6,11 @@ module Server
   )
 where
 
-import Control.Exception
+import Control.Exception (IOException, SomeException, catch, try)
 import Data.ByteString.Char8 (ByteString, length, pack, unpack)
 import Network.Socket
 import qualified Network.Socket.ByteString as SocketByteString
+import System.FilePath
 import System.IO
 
 data ServerConfig = ServerConfig {server_port :: Int, server_connection_pool :: Int, server_content :: [Char], default_page :: [Char]}
@@ -59,9 +60,9 @@ createHttpResponce str = "HTTP/1.1 200 OK\r\n" ++ "Content-Length: " ++ show (Pr
 
 parceHttpRequest :: [Char] -> ServerConfig -> [Char]
 parceHttpRequest header server_config = do
-  let list = words header
-  let path = if Prelude.length list >= 2 then list !! 1 else default_page server_config
-  server_content server_config ++ path
+  let header_terms = words header
+  let file_name = if Prelude.length header_terms >= 2 then header_terms !! 1 else default_page server_config
+  takeDirectory (server_content server_config) </> takeFileName file_name
 
 handleRequest :: Socket -> ServerConfig -> IO ()
 handleRequest csock server_config = do
