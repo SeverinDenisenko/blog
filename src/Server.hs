@@ -116,7 +116,7 @@ createGETResponse csock server_config request = do
   file_dump_try <- try (dumpFileContents response_file) :: IO (Either SomeException [Char])
   case file_dump_try of
     Left _ -> do
-      let response = HTTPErrorResponse (http_request_protocol_version request) 301 "Moved Permanently" (default_page server_config)
+      let response = HTTPErrorResponse (http_request_protocol_version request) 308 "Moved Permanently" (default_page server_config)
       let response_str = creteDataFromHTTPErrorResponse response
       _ <- writeSocket csock response_str
       closeConnection csock
