@@ -75,7 +75,5 @@ handleRequest csock server_config = do
       return ()
     Right file_dump -> do
       let http_responce = createHttpResponce file_dump
-      sent <- writeSocket csock http_responce
-      print $ unwords ["Received :", unpack dat]
-      print $ unwords ["Sent :", show sent]
+      _ <- writeSocket csock http_responce
       if Data.ByteString.Char8.length dat == 0 then close csock else handleRequest csock server_config
