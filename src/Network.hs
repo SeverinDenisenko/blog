@@ -39,17 +39,16 @@ readSocket csock = catch (readSocketUnsafe csock) handler
       print ("Error while reading from socket: " ++ show ex)
       return (show ex)
 
-writeSocketUnsafe :: Socket -> String -> IO Int
+writeSocketUnsafe :: Socket -> String -> IO ()
 writeSocketUnsafe csock string = do
-  SocketByteString.send csock (pack string)
+  SocketByteString.sendAll csock (pack string)
 
-writeSocket :: Socket -> String -> IO Int
+writeSocket :: Socket -> String -> IO ()
 writeSocket csock string = catch (writeSocketUnsafe csock string) handler
   where
-    handler :: IOException -> IO Int
+    handler :: IOException -> IO ()
     handler ex = do
       print ("Error while writing to socket: " ++ show ex)
-      return 0
 
 closeConnection :: Socket -> IO ()
 closeConnection csock = do

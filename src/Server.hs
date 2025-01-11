@@ -123,26 +123,26 @@ createGETResponse csock server_config request = do
         then do
           let response = HTTPRedirectResponse "HTTP/1.1" 308 "Moved Permanently" (default_page server_config)
           let response_str = creteDataFromHTTPRedirectResponse response
-          _ <- writeSocket csock response_str
+          writeSocket csock response_str
           closeConnection csock
         else do
           let response = HTTPErrorResponse "HTTP/1.1" 404 "Not Found"
           let response_str = creteDataFromHTTPErrorResponse response
-          _ <- writeSocket csock response_str
+          writeSocket csock response_str
           closeConnection csock
     Right file_dump -> do
       let content_type = extentionToContentType extention
       let content_size = length file_dump
       let response = HTTPResponse "HTTP/1.1" 200 "OK" content_size content_type file_dump
       let response_str = creteDataFromHTTPResponse response
-      _ <- writeSocket csock response_str
+      writeSocket csock response_str
       closeConnection csock
 
 createNotAllowedResponse :: Socket -> HTTPRequest -> IO ()
 createNotAllowedResponse csock request = do
   let response = HTTPErrorResponse "HTTP/1.1" 405 "Method Not Allowed"
   let response_str = creteDataFromHTTPErrorResponse response
-  _ <- writeSocket csock response_str
+  writeSocket csock response_str
   closeConnection csock
 
 createResponse :: Socket -> ServerConfig -> HTTPRequest -> IO ()
