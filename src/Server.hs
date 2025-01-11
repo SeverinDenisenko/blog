@@ -112,10 +112,14 @@ createGETResponse csock server_config request = do
   file_dump_try <- try (dumpFileContents response_file) :: IO (Either SomeException String)
   case file_dump_try of
     Left _ -> do
-      let response = HTTPRedirectResponse (http_request_protocol_version request) 308 "Moved Permanently" (default_page server_config)
-      let response_str = creteDataFromHTTPRedirectResponse response
-      _ <- writeSocket csock response_str
-      closeConnection csock
+      if extention == ".html"
+        then do
+          print ("Can't send file: " ++ response_file)
+          let response = HTTPRedirectResponse (http_request_protocol_version request) 308 "Moved Permanently" (default_page server_config)
+          let response_str = creteDataFromHTTPRedirectResponse response
+          _ <- writeSocket csock response_str
+          closeConnection csock
+        else closeConnection csock
     Right file_dump -> do
       let content_type = extentionToContentType extention
       let content_size = length file_dump
