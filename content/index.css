@@ -162,3 +162,8 @@ a {
     text-decoration: none;
     color: #fff;
 }
+
+img {
+    height: 33.33vw;
+    object-fit: cover;
+}
