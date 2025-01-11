@@ -21,6 +21,7 @@ dependencies:
 - bytestring
 - filepath
 - directory
+- async
 
 ghc-options:
 - -Wall
