@@ -31,13 +31,21 @@ readSocketUnsafe csock = do
   string <- SocketByteString.recv csock 4096
   return (unpack string)
 
-readSocket :: Socket -> IO String
-readSocket csock = catch (readSocketUnsafe csock) handler
+readSocket :: Socket -> IO (Maybe String)
+readSocket csock = catch (reader csock) handler
   where
-    handler :: IOException -> IO String
+    reader :: Socket -> IO (Maybe String)
+    reader csock = do
+      recived <- readSocketUnsafe csock
+      if null recived
+        then do
+          print "Client disconnected."
+          return Nothing
+        else return (Just recived)
+    handler :: IOException -> IO (Maybe String)
     handler ex = do
       print ("Error while reading from socket: " ++ show ex)
-      return (show ex)
+      return Nothing
 
 writeSocketUnsafe :: Socket -> String -> IO ()
 writeSocketUnsafe csock string = do

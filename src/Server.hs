@@ -32,6 +32,12 @@ serverMainLoop sock server_config = do
   _ <- forkIO (handleRequest csock server_config)
   serverMainLoop sock server_config
 
+currentHTTPVersion :: String
+currentHTTPVersion = "HTTP/1.1"
+
+isSupportedHTTPVersion :: String -> Bool
+isSupportedHTTPVersion v = currentHTTPVersion == v
+
 data HTTPException = HTTPException deriving (Show)
 
 instance Exception HTTPException
@@ -91,7 +97,10 @@ parceHttpRequest request = do
       let method = request_tokens !! 0
       let path = request_tokens !! 1
       let protocol_version = request_tokens !! 2
-      HTTPRequest method path protocol_version
+      if isSupportedHTTPVersion protocol_version
+        then
+          HTTPRequest method path protocol_version
+        else throw HTTPException
 
 getResponseFilePath :: String -> ServerConfig -> String
 getResponseFilePath path server_config = takeDirectory (server_content server_config) </> takeFileName path
@@ -121,26 +130,26 @@ createGETResponse csock server_config request = do
       print ("Can't send file: " ++ response_file)
       if contentSupportRedirect extention
         then do
-          let response = HTTPRedirectResponse "HTTP/1.1" 308 "Moved Permanently" (default_page server_config)
+          let response = HTTPRedirectResponse currentHTTPVersion 308 "Moved Permanently" (default_page server_config)
           let response_str = creteDataFromHTTPRedirectResponse response
           writeSocket csock response_str
           closeConnection csock
         else do
-          let response = HTTPErrorResponse "HTTP/1.1" 404 "Not Found"
+          let response = HTTPErrorResponse currentHTTPVersion 404 "Not Found"
           let response_str = creteDataFromHTTPErrorResponse response
           writeSocket csock response_str
           closeConnection csock
     Right file_dump -> do
       let content_type = extentionToContentType extention
       let content_size = length file_dump
-      let response = HTTPResponse "HTTP/1.1" 200 "OK" content_size content_type file_dump
+      let response = HTTPResponse currentHTTPVersion 200 "OK" content_size content_type file_dump
       let response_str = creteDataFromHTTPResponse response
       writeSocket csock response_str
       closeConnection csock
 
 createNotAllowedResponse :: Socket -> HTTPRequest -> IO ()
 createNotAllowedResponse csock request = do
-  let response = HTTPErrorResponse "HTTP/1.1" 405 "Method Not Allowed"
+  let response = HTTPErrorResponse currentHTTPVersion 405 "Method Not Allowed"
   let response_str = creteDataFromHTTPErrorResponse response
   writeSocket csock response_str
   closeConnection csock
@@ -161,15 +170,15 @@ createResponse csock server_config request
 handleRequest :: Socket -> ServerConfig -> IO ()
 handleRequest csock server_config = do
   dat <- readSocket csock
-  if null dat
-    then do
-      closeConnection csock
-      print "Session was unexpectedly dropped"
-    else do
-      let request = parceHttpRequest dat
-      catch (createResponse csock server_config request) handle
+  respond dat
   where
-    handle :: HTTPException -> IO ()
-    handle ex = do
-      closeConnection csock
-      print ("Error processing responce: " ++ show ex)
+    respond :: Maybe String -> IO ()
+    respond Nothing = return ()
+    respond (Just req) = do
+      let request = parceHttpRequest req
+      catch (createResponse csock server_config request) handle
+      where
+        handle :: HTTPException -> IO ()
+        handle ex = do
+          closeConnection csock
+          print ("Error processing responce: " ++ show ex)
