@@ -108,6 +108,7 @@ extentionToContentType ext
 contentSupportRedirect :: String -> Bool
 contentSupportRedirect ext
   | ext == ".html" = True
+  | ext == "" = True
   | otherwise = False
 
 createGETResponse :: Socket -> ServerConfig -> HTTPRequest -> IO ()
