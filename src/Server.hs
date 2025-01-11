@@ -6,14 +6,13 @@ module Server
   )
 where
 
+import Control.Concurrent (forkIO)
 import Control.Exception (Exception, SomeException, catch, try)
 import Control.Exception.Base (throw)
-import Control.Concurrent
 import Files
 import Network
 import Network.Socket
 import System.FilePath
-import Control.Concurrent.Async
 
 data ServerConfig = ServerConfig
   { server_port :: Int,
@@ -30,7 +29,7 @@ runServer server_config = do
 serverMainLoop :: Socket -> ServerConfig -> IO ()
 serverMainLoop sock server_config = do
   csock <- acceptConnection sock
-  _ <- async (handleRequest csock server_config)
+  _ <- forkIO (handleRequest csock server_config)
   serverMainLoop sock server_config
 
 data HTTPException = HTTPException deriving (Show)
