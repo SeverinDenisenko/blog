@@ -105,6 +105,11 @@ extentionToContentType ext
   | ext == ".png" = "image/png"
   | otherwise = "text"
 
+contentSupportRedirect :: String -> Bool
+contentSupportRedirect ext
+  | ext == ".html" = True
+  | otherwise = False
+
 createGETResponse :: Socket -> ServerConfig -> HTTPRequest -> IO ()
 createGETResponse csock server_config request = do
   let response_file = getResponseFilePath (http_path request) server_config
@@ -112,14 +117,18 @@ createGETResponse csock server_config request = do
   file_dump_try <- try (dumpFileContents response_file) :: IO (Either SomeException String)
   case file_dump_try of
     Left _ -> do
-      if extention == ".html"
+      print ("Can't send file: " ++ response_file)
+      if contentSupportRedirect extention
         then do
-          print ("Can't send file: " ++ response_file)
           let response = HTTPRedirectResponse "HTTP/1.1" 308 "Moved Permanently" (default_page server_config)
           let response_str = creteDataFromHTTPRedirectResponse response
           _ <- writeSocket csock response_str
           closeConnection csock
-        else closeConnection csock
+        else do
+          let response = HTTPErrorResponse "HTTP/1.1" 404 "Not Found"
+          let response_str = creteDataFromHTTPErrorResponse response
+          _ <- writeSocket csock response_str
+          closeConnection csock
     Right file_dump -> do
       let content_type = extentionToContentType extention
       let content_size = length file_dump
