@@ -28,11 +28,8 @@ runServer server_config = do
 serverMainLoop :: Socket -> ServerConfig -> IO ()
 serverMainLoop sock server_config = do
   csock <- acceptConnection sock
-  catch (handleRequest csock server_config >> serverMainLoop sock server_config) handler
-  where
-    handler :: SomeException -> IO ()
-    handler ex = do
-      print ("Error while handling request: " ++ show ex)
+  handleRequest csock server_config
+  serverMainLoop sock server_config
 
 data HTTPException = HTTPException deriving (Show)
 
@@ -150,8 +147,14 @@ handleRequest :: Socket -> ServerConfig -> IO ()
 handleRequest csock server_config = do
   dat <- readSocket csock
   if null dat
-    then
+    then do
       closeConnection csock
+      print "Session was unexpectedly dropped"
     else do
       let request = parceHttpRequest dat
-      createResponse csock server_config request
+      catch (createResponse csock server_config request) handle
+  where
+    handle :: HTTPException -> IO ()
+    handle ex = do
+      closeConnection csock
+      print ("Error processing responce: " ++ show ex)
