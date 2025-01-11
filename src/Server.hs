@@ -115,7 +115,7 @@ createGETResponse csock server_config request = do
       if extention == ".html"
         then do
           print ("Can't send file: " ++ response_file)
-          let response = HTTPRedirectResponse (http_request_protocol_version request) 308 "Moved Permanently" (default_page server_config)
+          let response = HTTPRedirectResponse "HTTP/1.1" 308 "Moved Permanently" (default_page server_config)
           let response_str = creteDataFromHTTPRedirectResponse response
           _ <- writeSocket csock response_str
           closeConnection csock
@@ -123,14 +123,14 @@ createGETResponse csock server_config request = do
     Right file_dump -> do
       let content_type = extentionToContentType extention
       let content_size = length file_dump
-      let response = HTTPResponse (http_request_protocol_version request) 200 "OK" content_size content_type file_dump
+      let response = HTTPResponse "HTTP/1.1" 200 "OK" content_size content_type file_dump
       let response_str = creteDataFromHTTPResponse response
       _ <- writeSocket csock response_str
       closeConnection csock
 
 createNotAllowedResponse :: Socket -> HTTPRequest -> IO ()
 createNotAllowedResponse csock request = do
-  let response = HTTPErrorResponse (http_request_protocol_version request) 405 "Method Not Allowed"
+  let response = HTTPErrorResponse "HTTP/1.1" 405 "Method Not Allowed"
   let response_str = creteDataFromHTTPErrorResponse response
   _ <- writeSocket csock response_str
   closeConnection csock
