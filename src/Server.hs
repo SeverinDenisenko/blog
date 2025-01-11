@@ -23,11 +23,7 @@ data ServerConfig = ServerConfig
 runServer :: ServerConfig -> IO ()
 runServer server_config = do
   sock <- openConnection (server_port server_config) (server_connection_pool server_config)
-  catch (serverMainLoop sock server_config) handler
-  where
-    handler :: SomeException -> IO ()
-    handler ex = do
-      print ex
+  serverMainLoop sock server_config
 
 serverMainLoop :: Socket -> ServerConfig -> IO ()
 serverMainLoop sock server_config = do
@@ -37,7 +33,6 @@ serverMainLoop sock server_config = do
     handler :: SomeException -> IO ()
     handler ex = do
       print ("Error while handling request: " ++ show ex)
-      serverMainLoop sock server_config
 
 data HTTPException = HTTPException deriving (Show)
 
