@@ -163,7 +163,20 @@ a {
     color: #fff;
 }
 
-img {
-    height: 33.33vw;
-    object-fit: cover;
+.img-container {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.img-container img {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    height: 33vh;;
+    width: auto;
+    display: inline-block;
 }
